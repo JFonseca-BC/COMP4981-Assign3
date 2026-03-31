@@ -1,0 +1,26 @@
+digraph FSM_V2 {
+    rankdir=TB;
+    node [shape=box];
+    START [shape=circle];
+    EXIT [shape=doublecircle];
+    
+    START -> INIT [label="parse_args"];
+    INIT -> PRE_FORK [label="socket_ready"];
+    
+    subgraph cluster_parent {
+        label = "Parent Process";
+        PRE_FORK -> MONITOR [label="spawn_pool"];
+        MONITOR -> PRE_FORK [label="child_died (SIGCHLD)"];
+        MONITOR -> CLEANUP [label="SIGINT/SIGTERM"];
+    }
+
+    subgraph cluster_worker {
+        label = "Worker Process";
+        WORKER_LOOP -> CHECK_LIB [label="new_conn"];
+        CHECK_LIB -> HANDLE_REQ [label="reload_if_needed"];
+        HANDLE_REQ -> WORKER_LOOP [label="finish_req"];
+    }
+
+    PRE_FORK -> WORKER_LOOP [label="fork()"];
+    CLEANUP -> EXIT;
+}
