@@ -14,9 +14,12 @@ generate_cmake_content() {
   local sources=""
   local headers=""
   local libraries=""
+  local is_shared=0
 
   for file in "$@"; do
-    if [[ $file == *".c" ]]; then
+    if [[ "$file" == "SHARED" ]]; then
+      is_shared=1
+    elif [[ $file == *".c" ]]; then
       sources="${sources}    \${CMAKE_SOURCE_DIR}/$file\n"
       echo "list(APPEND SOURCES \${CMAKE_SOURCE_DIR}/$file)" >> "$output_file"
     elif [[ $file == *".h" ]]; then
@@ -34,7 +37,16 @@ generate_cmake_content() {
   echo "set(${entity}_HEADERS" >> "$output_file"
   echo -e "$headers)" >> "$output_file"
   echo "" >> "$output_file"
-  echo "add_executable($entity \${${entity}_SOURCES})" >> "$output_file"
+
+  # Dynamic target generation based on SHARED keyword
+  if [ $is_shared -eq 1 ]; then
+    echo "add_library($entity SHARED \${${entity}_SOURCES})" >> "$output_file"
+    echo "set_target_properties($entity PROPERTIES PREFIX \"\")" >> "$output_file"
+    echo "set_target_properties($entity PROPERTIES LIBRARY_OUTPUT_DIRECTORY \${CMAKE_SOURCE_DIR}/include)" >> "$output_file"
+  else
+    echo "add_executable($entity \${${entity}_SOURCES})" >> "$output_file"
+  fi
+
   echo "target_include_directories($entity PUBLIC \${CMAKE_SOURCE_DIR}/include)" >> "$output_file"
   echo "target_include_directories($entity PRIVATE /usr/local/include)" >> "$output_file"
   echo "" >> "$output_file"

@@ -1,1 +1,2 @@
-server src/server.c
+server src/server.c dl
+handler SHARED src/handler.c ndbm
