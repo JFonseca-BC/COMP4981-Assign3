@@ -45,7 +45,7 @@ static volatile sig_atomic_t keep_running = 1;
 static void handle_sigint(int sig);
 static void log_message(const char *level, const char *format, ...)
     __attribute__((format(printf, 2, 3)));
-static void worker_loop(int server_fd);
+static void worker_loop(int server_fd) __attribute__((noreturn));
 
 /* --- Signal Handlers --- */
 static void handle_sigint(int sig) {
@@ -171,7 +171,16 @@ int main(int argc, char *argv[]) {
   }
 
   /* Setup Graceful Shutdown */
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
+#endif
   sa.sa_handler = handle_sigint;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
   (void)sigemptyset(&sa.sa_mask);
   sa.sa_flags = 0;
   (void)sigaction(SIGINT, &sa, NULL);

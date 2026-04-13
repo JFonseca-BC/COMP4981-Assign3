@@ -71,15 +71,15 @@ static void send_header(int client_fd, int status, const char *status_text,
 
 int handle_request(int client_fd) {
   char buffer[BUFFER_SIZE] = {0};
-  ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-
-  if (bytes_read <= 0) {
-    return -1;
-  }
-
+  ssize_t bytes_read;
   char method[METHOD_SIZE];
   char path[PATH_SIZE];
   char protocol[PROTOCOL_SIZE];
+
+  bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+  if (bytes_read <= 0) {
+    return -1;
+  }
 
   if (sscanf(buffer, "%15s %255s %15s", method, path, protocol) < 2) {
     return -1;
@@ -94,13 +94,16 @@ int handle_request(int client_fd) {
   }
 
   if (strcmp(method, "GET") == 0 || strcmp(method, "HEAD") == 0) {
-    char filepath[FILEPATH_SIZE] = ".";
+    char filepath[FILEPATH_SIZE];
     struct stat st;
+    int file_fd;
+    const char *mime;
 
+    /* Safely format the filepath without using insecure strcat */
     if (strcmp(path, "/") == 0) {
-      (void)strcat(filepath, "/index.html");
+      (void)snprintf(filepath, sizeof(filepath), "./index.html");
     } else {
-      (void)strcat(filepath, path);
+      (void)snprintf(filepath, sizeof(filepath), ".%s", path);
     }
 
     if (stat(filepath, &st) < 0 || S_ISDIR(st.st_mode) != 0) {
@@ -113,14 +116,14 @@ int handle_request(int client_fd) {
     }
 
     /* Enforce O_CLOEXEC for security rules */
-    int file_fd = open(filepath, O_RDONLY | O_CLOEXEC);
+    file_fd = open(filepath, O_RDONLY | O_CLOEXEC);
     if (file_fd < 0) {
       send_header(client_fd, HTTP_FORBIDDEN, "Forbidden", "text/plain",
                   (size_t)MSG_LEN_13);
       return 0;
     }
 
-    const char *mime = get_mime_type(filepath);
+    mime = get_mime_type(filepath);
     send_header(client_fd, HTTP_OK, "OK", mime, (size_t)st.st_size);
 
     if (strcmp(method, "GET") == 0) {
