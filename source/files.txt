@@ -1,2 +1,3 @@
 server src/server.c include/handler.h dl
 handler SHARED src/handler.c gdbm_compat gdbm ndbm
+query src/query.c gdbm_compat gdbm ndbm

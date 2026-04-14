@@ -5,3 +5,5 @@ test-files/
 supported_c_compilers.txt
 CMakeLists.txt
 *.so
+*.dir
+*.pag

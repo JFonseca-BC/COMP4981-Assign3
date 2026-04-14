@@ -101,7 +101,7 @@ int handle_request(int client_fd) {
 
     /* Safely format the filepath without using insecure strcat */
     if (strcmp(path, "/") == 0) {
-      (void)snprintf(filepath, sizeof(filepath), "./fallback.html");
+      (void)snprintf(filepath, sizeof(filepath), "./index.html");
     } else {
       (void)snprintf(filepath, sizeof(filepath), ".%s", path);
     }
@@ -154,7 +154,7 @@ int handle_request(int client_fd) {
         char key_str[KEY_SIZE];
         datum key;
         datum value;
-        const char *msg_ok = "Data stored successfully.";
+        const char *msg_ok = "Data stored successfully.\n";
         size_t msg_ok_len = strlen(msg_ok);
 
         (void)snprintf(key_str, sizeof(key_str), "%ld", (long)time(NULL));
