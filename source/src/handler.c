@@ -89,7 +89,7 @@ int handle_request(int client_fd) {
   if (strstr(path, "..") != NULL) {
     send_header(client_fd, HTTP_FORBIDDEN, "Forbidden", "text/plain",
                 (size_t)MSG_LEN_13);
-    (void)send(client_fd, "403 Forbidden", (size_t)MSG_LEN_13, 0);
+    (void)send(client_fd, "403 Forbidden\n", (size_t)MSG_LEN_13, 0);
     return 0;
   }
 
@@ -101,7 +101,7 @@ int handle_request(int client_fd) {
 
     /* Safely format the filepath without using insecure strcat */
     if (strcmp(path, "/") == 0) {
-      (void)snprintf(filepath, sizeof(filepath), "./index.html");
+      (void)snprintf(filepath, sizeof(filepath), "./fallback.html");
     } else {
       (void)snprintf(filepath, sizeof(filepath), ".%s", path);
     }
@@ -110,7 +110,7 @@ int handle_request(int client_fd) {
       send_header(client_fd, HTTP_NOT_FOUND, "Not Found", "text/plain",
                   (size_t)MSG_LEN_13);
       if (strcmp(method, "GET") == 0) {
-        (void)send(client_fd, "404 Not Found", (size_t)MSG_LEN_13, 0);
+        (void)send(client_fd, "404 Not Found\n", (size_t)MSG_LEN_13, 0);
       }
       return 0;
     }
