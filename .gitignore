@@ -1,5 +1,6 @@
 build/
 .flags/
+test-files/
 
 supported_c_compilers.txt
 CMakeLists.txt

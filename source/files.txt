@@ -1,2 +1,2 @@
-server src/server.c dl
-handler SHARED src/handler.c ndbm
+server src/server.c include/handler.h dl
+handler SHARED src/handler.c gdbm_compat gdbm ndbm

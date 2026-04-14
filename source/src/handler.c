@@ -101,7 +101,7 @@ int handle_request(int client_fd) {
 
     /* Safely format the filepath without using insecure strcat */
     if (strcmp(path, "/") == 0) {
-      (void)snprintf(filepath, sizeof(filepath), "./index.html");
+      (void)snprintf(filepath, sizeof(filepath), "./fallback.html");
     } else {
       (void)snprintf(filepath, sizeof(filepath), ".%s", path);
     }
