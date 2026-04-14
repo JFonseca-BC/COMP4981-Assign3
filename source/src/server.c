@@ -31,8 +31,6 @@ enum ServerConstants {
   MAX_PORT = 65535,
   LISTEN_BACKLOG = 128,
   TIME_STR_SIZE = 64,
-  DEFAULT_PORT = 8080,
-  DEFAULT_WORKERS = 4,
   BASE_TEN = 10
 };
 
@@ -143,8 +141,8 @@ static void worker_loop(int server_fd) {
 /* --- Main Event Loop --- */
 int main(int argc, char *argv[]) {
   int opt;
-  long port_in = DEFAULT_PORT;
-  long num_workers = DEFAULT_WORKERS;
+  long port_in = 0;
+  long num_workers = 0;
   int server_fd = -1;
   struct sigaction sa;
   int reuse = 1;
@@ -165,13 +163,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  /* If arguments are missing or invalid, print usage and fail */
   if (port_in <= 0 || port_in > MAX_PORT || num_workers <= 0) {
-    (void)fprintf(stderr, "Invalid port or worker count.\n");
+    (void)fprintf(stderr, "Usage: %s -p <port> -w <workers>\n", argv[0]);
     return EXIT_FAILURE;
   }
 
   /* Setup Graceful Shutdown */
-
+  
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdisabled-macro-expansion"
