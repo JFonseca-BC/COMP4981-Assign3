@@ -30,8 +30,7 @@ enum HandlerConstants {
   HTTP_FORBIDDEN = 403,
   HTTP_NOT_FOUND = 404,
   HTTP_INTERNAL_ERROR = 500,
-  HTTP_NOT_IMPLEMENTED = 501,
-  MSG_LEN_13 = 13
+  HTTP_NOT_IMPLEMENTED = 501
 };
 
 /* --- Internal Helper Prototypes --- */
@@ -87,9 +86,11 @@ int handle_request(int client_fd) {
 
   /* Security: Prevent Directory Traversal */
   if (strstr(path, "..") != NULL) {
+    const char *msg_403 = "403 Forbidden\n";
+    size_t msg_403_len = strlen(msg_403);
     send_header(client_fd, HTTP_FORBIDDEN, "Forbidden", "text/plain",
-                (size_t)MSG_LEN_13);
-    (void)send(client_fd, "403 Forbidden\n", (size_t)MSG_LEN_13, 0);
+                msg_403_len);
+    (void)send(client_fd, msg_403, msg_403_len, 0);
     return 0;
   }
 
@@ -107,10 +108,12 @@ int handle_request(int client_fd) {
     }
 
     if (stat(filepath, &st) < 0 || S_ISDIR(st.st_mode) != 0) {
+      const char *msg_404 = "404 Not Found\n";
+      size_t msg_404_len = strlen(msg_404);
       send_header(client_fd, HTTP_NOT_FOUND, "Not Found", "text/plain",
-                  (size_t)MSG_LEN_13);
+                  msg_404_len);
       if (strcmp(method, "GET") == 0) {
-        (void)send(client_fd, "404 Not Found\n", (size_t)MSG_LEN_13, 0);
+        (void)send(client_fd, msg_404, msg_404_len, 0);
       }
       return 0;
     }
@@ -118,8 +121,13 @@ int handle_request(int client_fd) {
     /* Enforce O_CLOEXEC for security rules */
     file_fd = open(filepath, O_RDONLY | O_CLOEXEC);
     if (file_fd < 0) {
+      const char *msg_403 = "403 Forbidden\n";
+      size_t msg_403_len = strlen(msg_403);
       send_header(client_fd, HTTP_FORBIDDEN, "Forbidden", "text/plain",
-                  (size_t)MSG_LEN_13);
+                  msg_403_len);
+      if (strcmp(method, "GET") == 0) {
+        (void)send(client_fd, msg_403, msg_403_len, 0);
+      }
       return 0;
     }
 
@@ -171,7 +179,7 @@ int handle_request(int client_fd) {
         send_header(client_fd, HTTP_OK, "OK", "text/plain", msg_ok_len);
         (void)send(client_fd, msg_ok, msg_ok_len, 0);
       } else {
-        const char *msg_err = "Database Error.";
+        const char *msg_err = "Database Error.\n";
         size_t msg_err_len = strlen(msg_err);
         send_header(client_fd, HTTP_INTERNAL_ERROR, "Internal Server Error",
                     "text/plain", msg_err_len);
@@ -179,7 +187,7 @@ int handle_request(int client_fd) {
       }
     }
   } else {
-    const char *msg_not_impl = "501 Not Implemented";
+    const char *msg_not_impl = "501 Not Implemented\n";
     size_t msg_not_impl_len = strlen(msg_not_impl);
     send_header(client_fd, HTTP_NOT_IMPLEMENTED, "Not Implemented",
                 "text/plain", msg_not_impl_len);
